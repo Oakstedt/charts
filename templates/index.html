@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSV Uploader</title>
+    <script src="https://cdn.plot.ly/plotly-2.30.0.min.js" charset="utf-8"></script>
+    <script src="/static/Plotter.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -42,7 +44,6 @@
             color: #5cb85c;
         }
     </style>
-<script src="https://cdn.plot.ly/plotly-2.30.0.min.js" charset="utf-8"></script>
 </head>
 <body>
 
@@ -52,12 +53,34 @@
     </div>
     <input type="file" id="file-input" accept=".csv" style="display: none;">
     <div id="status-message" class="status-message"></div>
+
+   <div id="controls" style="display: none; margin-top: 20px;">
+    <label for="x-select">X-Axis:</label>
+    <select id="x-select"></select>
+    
+    <label for="y-select">Y-Axis:</label>
+    <select id="y-select"></select>
+    
+    <label for="chart-type">Chart Type:</label>
+    <select id="chart-type">
+        <option value="scatter">Scatter Plot</option>
+        <option value="bar">Bar Chart</option>
+        <option value="box">Box Plot</option>
+    </select>
+
+    <button id="plot-button">Generate Plot</button>
+</div>
+
     <div id="chart-container" style="width: 100%; height: 500px;"></div>
 
     <script>
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
         const statusMessage = document.getElementById('status-message');
+        const controls = document.getElementById('controls');
+        
+        // Instantiate our new Plotter class
+        const plotter = new Plotter('chart-container', 'x-select', 'y-select', 'plot-button', 'chart-type');
 
         // Prevent default drag behaviors
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -113,6 +136,10 @@
 
             statusMessage.textContent = 'Uploading...';
             statusMessage.className = 'status-message';
+            
+            // Clear previous chart and hide controls
+            Plotly.purge('chart-container');
+            controls.style.display = 'none';
 
             try {
                 const response = await fetch('/upload', {
@@ -125,52 +152,13 @@
                 }
 
                 const data = await response.json();
+                
+                // Pass the data to our new Plotter class
+                plotter.loadData(data);
 
-                // Get the column names from the first row of data
-                const columnNames = Object.keys(data[0]);
-
-                // For our first plot, let's automatically pick the first two columns
-                const xColumn = columnNames[0];
-                const yColumn = columnNames[1];
-
-                // Extract the data for the x and y axes
-                const xData = data.map(row => row[xColumn]);
-                const yData = data.map(row => row[yColumn]);
-
-                // Define the data for the scatter plot
-                const trace1 = {
-                    x: xData,
-                    y: yData,
-                    mode: 'markers',
-                    type: 'scatter',
-                    name: 'Sample Data'
-                };
-
-const layout = {
-    title: `Scatter Plot of ${xColumn} vs ${yColumn}`,
-    xaxis: {
-        title: xColumn,
-        autorange: true
-    },
-    yaxis: {
-        title: yColumn,
-        autorange: true
-    }
-};
-
-const plotData = [trace1];
-const config = { responsive: true }; // Make the chart responsive
-
-// Render the plot in the 'chart-container' div
-Plotly.newPlot('chart-container', plotData, layout, config);
-
-// For now, let's just show a success message
-statusMessage.textContent = 'File uploaded and scatter plot generated successfully!';
-statusMessage.className = 'status-message success-message';
-
-                // For now, let's just show a success message and log the data
-                statusMessage.textContent = 'File uploaded successfully! Check the console for data.';
+                statusMessage.textContent = 'File uploaded successfully! Select columns to plot.';
                 statusMessage.className = 'status-message success-message';
+                controls.style.display = 'block';
                 
             } catch (error) {
                 statusMessage.textContent = `Error: ${error.message}`;
@@ -178,7 +166,6 @@ statusMessage.className = 'status-message success-message';
                 console.error('Upload failed:', error);
             }
         }
-
     </script>
 </body>
 </html>
