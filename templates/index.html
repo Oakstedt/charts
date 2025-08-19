@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Uploader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            flex-direction: column;
+        }
+        .drop-zone {
+            width: 80%;
+            max-width: 600px;
+            height: 200px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .drop-zone.dragover {
+            background-color: #e9e9e9;
+        }
+        .status-message {
+            margin-top: 20px;
+            font-size: 1.1em;
+            color: #555;
+        }
+        .error-message {
+            color: #d9534f;
+        }
+        .success-message {
+            color: #5cb85c;
+        }
+    </style>
+<script src="https://cdn.plot.ly/plotly-2.30.0.min.js" charset="utf-8"></script>
+</head>
+<body>
+
+    <h2>Drag & Drop CSV File</h2>
+    <div class="drop-zone" id="drop-zone">
+        <p>Drag your CSV file here or click to select one</p>
+    </div>
+    <input type="file" id="file-input" accept=".csv" style="display: none;">
+    <div id="status-message" class="status-message"></div>
+    <div id="chart-container" style="width: 100%; height: 500px;"></div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const statusMessage = document.getElementById('status-message');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop zone when a file is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        // Handle the file drop
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        // Handle file selection via click
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        // Process the selected files
+        function handleFiles(files) {
+            if (files.length === 0) {
+                return;
+            }
+            const file = files[0];
+            if (file.name.endsWith('.csv')) {
+                uploadFile(file);
+            } else {
+                statusMessage.textContent = 'Invalid file type. Please upload a .csv file.';
+                statusMessage.className = 'status-message error-message';
+            }
+        }
+
+        // Upload the file to the backend
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            statusMessage.textContent = 'Uploading...';
+            statusMessage.className = 'status-message';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server returned status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Get the column names from the first row of data
+                const columnNames = Object.keys(data[0]);
+
+                // For our first plot, let's automatically pick the first two columns
+                const xColumn = columnNames[0];
+                const yColumn = columnNames[1];
+
+                // Extract the data for the x and y axes
+                const xData = data.map(row => row[xColumn]);
+                const yData = data.map(row => row[yColumn]);
+
+                // Define the data for the scatter plot
+                const trace1 = {
+                    x: xData,
+                    y: yData,
+                    mode: 'markers',
+                    type: 'scatter',
+                    name: 'Sample Data'
+                };
+
+const layout = {
+    title: `Scatter Plot of ${xColumn} vs ${yColumn}`,
+    xaxis: {
+        title: xColumn,
+        autorange: true
+    },
+    yaxis: {
+        title: yColumn,
+        autorange: true
+    }
+};
+
+const plotData = [trace1];
+const config = { responsive: true }; // Make the chart responsive
+
+// Render the plot in the 'chart-container' div
+Plotly.newPlot('chart-container', plotData, layout, config);
+
+// For now, let's just show a success message
+statusMessage.textContent = 'File uploaded and scatter plot generated successfully!';
+statusMessage.className = 'status-message success-message';
+
+                // For now, let's just show a success message and log the data
+                statusMessage.textContent = 'File uploaded successfully! Check the console for data.';
+                statusMessage.className = 'status-message success-message';
+                
+            } catch (error) {
+                statusMessage.textContent = `Error: ${error.message}`;
+                statusMessage.className = 'status-message error-message';
+                console.error('Upload failed:', error);
+            }
+        }
+
+    </script>
+</body>
+</html>
