@@ -10,6 +10,46 @@ class Plotter {
         this.plotButton.addEventListener('click', () => {
             this.generatePlot(); // We will rename this method
         });
+
+        const transposeButton = document.getElementById('transpose-button');
+
+        transposeButton.addEventListener('click', async () => {
+    if (!plotter.processedData) {
+        statusMessage.textContent = 'Please upload a file first.';
+        statusMessage.className = 'status-message error-message';
+        return;
+    }
+
+    statusMessage.textContent = 'Transposing data...';
+    statusMessage.className = 'status-message';
+    
+    try {
+        const response = await fetch('/transpose', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(plotter.processedData), // Send the current processed data to the backend
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server returned status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Load the new, transposed data back into the Plotter class
+        plotter.loadData(data);
+        
+        statusMessage.textContent = 'Data transposed successfully! Select new columns to plot.';
+        statusMessage.className = 'status-message success-message';
+        
+        } catch (error) {
+            statusMessage.textContent = `Error transposing data: ${error.message}`;
+            statusMessage.className = 'status-message error-message';
+            console.error('Transpose failed:', error);
+        }
+        });
     }
 
     // Stores the data and populates the dropdowns
@@ -152,4 +192,6 @@ class Plotter {
             name: `${xColumn} vs ${yColumn}`
         };
     }
+
+    
 }

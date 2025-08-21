@@ -56,6 +56,41 @@ def upload_file():
 
     return jsonify({"error": "File type not supported. Please upload a .csv file."}), 415
 
+@app.route('/transpose', methods=['POST'])
+def transpose_data():
+    try:
+        # Receive the JSON data from the frontend
+        json_data = request.get_json()
+        
+        # Convert the JSON back to a pandas DataFrame
+        df = pd.DataFrame(json_data)
+        
+        # Determine the name of the categorical column (e.g., 'Gene') dynamically
+        # We assume the first column that is not a number is the category column
+        category_column = None
+        for col in df.columns:
+            if not pd.api.types.is_numeric_dtype(df[col]):
+                category_column = col
+                break
+        
+        if category_column is None:
+            return jsonify({"error": "No non-numeric column found to use as category."}), 400
+
+        # Set the category column as the index for transposition
+        df = df.set_index(category_column)
+        
+        # Transpose the DataFrame
+        df_transposed = df.T
+        
+        # Reset the index and give it a new name
+        df_transposed = df_transposed.reset_index().rename(columns={'index': 'Category'})
+        
+        # Return the transposed data as JSON
+        return df_transposed.to_json(orient='records'), 200
+    
+    except Exception as e:
+        return jsonify({"error": f"An error occurred during transposition: {e}"}), 500
+
 if __name__ == '__main__':
     # Run the server. In production, you'd use a more robust server.
     app.run(debug=True)
