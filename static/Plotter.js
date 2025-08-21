@@ -47,17 +47,40 @@ class Plotter {
         }
     }
 
-    // We will rename this method and add a new parameter
     generatePlot() {
         const xColumn = this.xSelect.value;
         const yColumn = this.ySelect.value;
         const chartType = this.chartTypeSelect.value;
+        const statusMessage = document.getElementById('status-message'); // Get the status element
 
         if (!this.processedData || !xColumn || !yColumn) {
             return;
         }
 
-        // Use a switch statement to select the correct chart function
+        // A simple check to see if a column is numeric
+        const isXNumeric = typeof this.processedData[0][xColumn] === 'number';
+        const isYNumeric = typeof this.processedData[0][yColumn] === 'number';
+
+        // Basic validation based on chart type
+        if (chartType === 'box' || chartType === 'bar') {
+            if (isXNumeric && isYNumeric) {
+                statusMessage.textContent = 'Warning: Bar and Box plots are best for comparing numerical data across categories. Try selecting a non-numeric column for the X-axis.';
+                statusMessage.className = 'status-message error-message';
+            } else {
+                statusMessage.textContent = 'Plot generated successfully!';
+                statusMessage.className = 'status-message success-message';
+            }
+        } else {
+            // Scatter plot validation
+            if (!isXNumeric || !isYNumeric) {
+                statusMessage.textContent = 'Warning: Scatter plots are best for comparing two numerical variables. Try selecting numerical columns for both axes.';
+                statusMessage.className = 'status-message error-message';
+            } else {
+                statusMessage.textContent = 'Plot generated successfully!';
+                statusMessage.className = 'status-message success-message';
+            }
+        }
+
         let trace = null;
         let layout = {};
 
