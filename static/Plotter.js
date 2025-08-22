@@ -4,11 +4,11 @@ class Plotter {
         this.xSelect = document.getElementById(xSelectId);
         this.ySelect = document.getElementById(ySelectId);
         this.plotButton = document.getElementById(plotButtonId);
-        this.chartTypeSelect = document.getElementById(chartTypeId); // New property
+        this.chartTypeSelect = document.getElementById(chartTypeId); 
         this.processedData = null;
 
         this.plotButton.addEventListener('click', () => {
-            this.generatePlot(); // We will rename this method
+            this.generatePlot(); 
         });
 
         const transposeButton = document.getElementById('transpose-button');
@@ -91,17 +91,17 @@ class Plotter {
         const xColumn = this.xSelect.value;
         const yColumn = this.ySelect.value;
         const chartType = this.chartTypeSelect.value;
-        const statusMessage = document.getElementById('status-message'); // Get the status element
+        const statusMessage = document.getElementById('status-message');
 
         if (!this.processedData || !xColumn || !yColumn) {
             return;
         }
 
-        // A simple check to see if a column is numeric
+        // Check to see if a column is numeric
         const isXNumeric = typeof this.processedData[0][xColumn] === 'number';
         const isYNumeric = typeof this.processedData[0][yColumn] === 'number';
 
-        // Basic validation based on chart type
+        // Validation based on chart type
         if (chartType === 'box' || chartType === 'bar') {
             if (isXNumeric && isYNumeric) {
                 statusMessage.textContent = 'Warning: Bar and Box plots are best for comparing numerical data across categories. Try selecting a non-numeric column for the X-axis.';
@@ -181,8 +181,6 @@ class Plotter {
 
     // Logic for a box plot
     getBoxTrace(xColumn, yColumn) {
-        // Box plots often use one categorical and one numerical column.
-        // We will need to handle this later, but for now, this will work.
         const xData = this.processedData.map(row => row[xColumn]);
         const yData = this.processedData.map(row => row[yColumn]);
         return {

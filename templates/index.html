@@ -81,7 +81,6 @@
         const statusMessage = document.getElementById('status-message');
         const controls = document.getElementById('controls');
         
-        // Instantiate our new Plotter class
         const plotter = new Plotter('chart-container', 'x-select', 'y-select', 'plot-button', 'chart-type');
 
         // Prevent default drag behaviors
@@ -155,7 +154,7 @@
 
                 const data = await response.json();
                 
-                // Pass the data to our new Plotter class
+                // Pass the data to Plotter
                 plotter.loadData(data);
 
                 statusMessage.textContent = 'File uploaded successfully! Select columns to plot.';
