@@ -78,7 +78,8 @@
     
     <button id="transpose-button">Transpose Data</button>
     <button id="plot-button">Generate Plot</button>
-    
+    <button id="download-button">Download as PNG</button>
+
 </div>
 </div>
 
@@ -89,6 +90,8 @@
         const fileInput = document.getElementById('file-input');
         const statusMessage = document.getElementById('status-message');
         const controls = document.getElementById('controls');
+        const downloadButton = document.getElementById('download-button');
+
         
         const plotter = new Plotter('chart-container', 'x-select', 'y-select', 'plot-button', 'chart-type', 'x-title', 'y-title');
 
@@ -124,6 +127,22 @@
         // Handle file selection via click
         dropZone.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        downloadButton.addEventListener('click', () => {
+            // Check if a plot has been generated
+            if (document.getElementById('chart-container').childElementCount === 0) {
+                statusMessage.textContent = 'Please generate a plot first.';
+                statusMessage.className = 'status-message error-message';
+                return;
+            }
+
+            Plotly.downloadImage('chart-container', {
+                format: 'png',
+                filename: 'my_plot',
+                height: 600,
+                width: 800
+            });
+        });
 
         // Process the selected files
         function handleFiles(files) {
