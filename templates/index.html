@@ -128,17 +128,24 @@
         dropZone.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-        downloadButton.addEventListener('click', () => {
-            // Check if a plot has been generated
-            if (document.getElementById('chart-container').childElementCount === 0) {
+       downloadButton.addEventListener('click', () => {
+            // Get the Plotly div element
+            const plotDiv = document.getElementById('chart-container');
+            
+            // Check if a plot has been generated and if Plotly is initialized
+            if (plotDiv.childElementCount === 0 || !plotDiv.data) {
                 statusMessage.textContent = 'Please generate a plot first.';
                 statusMessage.className = 'status-message error-message';
                 return;
             }
 
-            Plotly.downloadImage('chart-container', {
+            // Get the plot's title from its layout object.
+            // Use a default filename if no title is available.
+            const filename = plotDiv.layout.title.text || 'my_plot';
+
+            Plotly.downloadImage(plotDiv, {
                 format: 'png',
-                filename: 'my_plot',
+                filename: filename,
                 height: 600,
                 width: 800
             });
