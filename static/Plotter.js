@@ -1,14 +1,16 @@
 class Plotter {
-    constructor(containerId, xSelectId, ySelectId, plotButtonId, chartTypeId) {
+    constructor(containerId, xSelectId, ySelectId, plotButtonId, chartTypeId, xTitleId, yTitleId) {
         this.container = document.getElementById(containerId);
         this.xSelect = document.getElementById(xSelectId);
         this.ySelect = document.getElementById(ySelectId);
         this.plotButton = document.getElementById(plotButtonId);
-        this.chartTypeSelect = document.getElementById(chartTypeId); 
+        this.chartTypeSelect = document.getElementById(chartTypeId);
+        this.xTitleInput = document.getElementById(xTitleId); // New property
+        this.yTitleInput = document.getElementById(yTitleId); // New property
         this.processedData = null;
 
         this.plotButton.addEventListener('click', () => {
-            this.generatePlot(); 
+            this.generatePlot();
         });
 
         const transposeButton = document.getElementById('transpose-button');
@@ -146,12 +148,16 @@ class Plotter {
     }
 
         // Reusable layout generation
-    getLayout(xColumn, yColumn, title) {
-        return {
-            title: `${title} of ${xColumn} vs ${yColumn}`,
-            xaxis: { title: xColumn },
-            yaxis: { title: yColumn }
-        };
+     getLayout(xColumn, yColumn, title) {
+         // Get the values from our new input fields
+         const xTitle = this.xTitleInput.value || xColumn;
+         const yTitle = this.yTitleInput.value || yColumn;
+
+         return {
+             title: `${title} of ${xTitle} vs ${yTitle}`,
+             xaxis: { title: xTitle },
+              yaxis: { title: yTitle }
+       };
     }
 
     // Logic for a scatter plot
